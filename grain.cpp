@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <climits>
+#include "heap.h"
 
 class Grain{
 	public:
@@ -19,7 +20,9 @@ class Grain{
 		int *far;
 		int *known;
 		int *trial;
+		Heap hp;
 		int nfr,nkw,ntr;
+		void set_tof();
 	private:
 };
 
@@ -34,6 +37,8 @@ void Grain::init(int nx, int ny){
 	trial=(int *)malloc(sizeof(int)*ncell);
 	known=(int *)malloc(sizeof(int)*ncell);
 
+	hp.init(ncell);
+
 	int i;
 	for(i=0;i<ncell;i++){
 		pt[i]=0;
@@ -47,7 +52,7 @@ void Grain::print(){
 	int i,j;
 	for(i=0;i<Ndiv[0];i++){
 	for(j=0;j<Ndiv[1];j++){
-		printf("%d ",kcell[i][j]);
+		printf("%d ",kcell[i][j]%INT_MAX);
 	}
 	printf("\n");
 	}
@@ -108,7 +113,7 @@ void Grain::star(){
 	int I,J;
 	for(i=0;i<Ndiv[0];i++){
 	for(j=0;j<Ndiv[1];j++){
-		//if(kcell[i][j]==0) kcell[i][j]=INT_MAX;
+		if(kcell[i][j]==0) kcell[i][j]=INT_MAX;
 		if(kcell[i][j]==1){
 			I=i+1;
 			J=j+1;
@@ -135,12 +140,46 @@ void Grain::star(){
 		I=i*Ndiv[1]+j;
 		if(kcell[i][j]==0) far[nfr++]=I;
 		if(kcell[i][j]==1) known[nkw++]=I;
-		if(kcell[i][j]==2) trial[ntr++]=I;
+		if(kcell[i][j]==2){
+		       	trial[ntr++]=I;
+			hp.add(2,I);
+		}
 
 	}
 	}
 	printf("nkw=%d, ntr=%d, nfr=%d (n=%d)\n",nkw,ntr,nfr,nkw+ntr+nfr);
+	hp.print();
 };
+void Grain::set_tof(){
+	int ix,iy,I0;
+	double val=hp.pop(&I0);
+	
+	ix=I0/Ndiv[1];
+	iy=I0%Ndiv[1];
+	kcell[ix][iy]=int(val);
+
+	int incx={1,0,-1,0};
+	int incy={0,1,0,-1};
+	int I,J,K,i;
+	double val;
+	for(i=0;i<4;i++){
+		I=i+incx[i];
+		J=j+incy[i];
+		if(I>=Ndiv[0]) continue;
+		if(J>=Ndiv[0]) continue;
+		if(I<0); continue;
+		if(J<0); continue;
+		Dxp=kcell[I+1][J]-kcell[I][J];
+		Dxm=kcell[I][J]-kcell[I-1][J];
+		Dyp=kcell[I][J+1]-kcell[I][J];
+		Dym=kcell[I][J]-kcell[I][J-1];
+		Dx=
+		val=kcell
+		K=I*Ndiv[1]+J;	
+		hp.add(val,K);
+		kcell[I][J]=val;
+	};
+};	
 int main(){
 	Grain gr;
 
